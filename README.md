@@ -1,10 +1,16 @@
-# Variables you may want to change:
+## Spin Rhythm lets you play a random song from the main soundtrack. Why can't we do the same for custom charts? 
+This project aims to change that. This will let you press a hotkey of your choice to start playing a new, random custom chart. It works equally as well regardless of if the game is open or not! 
 
-difficulty: default is 4, which is XD
+## Variables you may want to change:
+
+`difficulty`: default is 4, which is XD
+
 If you want expert, change it to 3
+
 Hard, change to 2, etc. etc
 
-key_to_listen_for: by default, it is listening for the "Home" key on the keyboard to be pressed
+`key_to_listen_for`: by default, it is listening for the "Home" key on the keyboard to be pressed
+
 You can change it to any of these:
 
 <details>
@@ -131,13 +137,13 @@ You can change it to any of these:
   * Key.scroll_lock
 </details>
 
-# How to install and run
+## How to install and run
 * Download this repository as a zip file or clone
 
 * Install Python 3 if you don't already have it https://python.org
 * Open a command prompt and cd to this directory
 * run `pip3 install -r requirements.txt`
-* then run python3 main.py
+* then run `python3 main.py`
 
 You can then simply leave that command prompt running in the background. It should work now, test it out!
 
