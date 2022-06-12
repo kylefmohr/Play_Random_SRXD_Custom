@@ -3,13 +3,13 @@ This project aims to change that. This will let you press a hotkey of your choic
 
 ## Variables you may want to change:
 
-`difficulty`: default is 4, which is XD
+[`difficulty`: default is 4, which is XD](https://github.com/kylefmohr/Play_Random_SRXD_Custom/blob/9ac0ff2b3a931d03af7ea263b16b0b7c7ddd2c64/main.py#L5)
 
 If you want expert, change it to 3
 
 Hard, change to 2, etc. etc
 
-`key_to_listen_for`: by default, **it is listening for the "Home" key** on the keyboard to be pressed
+[`key_to_listen_for`: by default, **it is listening for the "Home" key** on the keyboard to be pressed](https://github.com/kylefmohr/Play_Random_SRXD_Custom/blob/9ac0ff2b3a931d03af7ea263b16b0b7c7ddd2c64/main.py#L6)
 
 You can change it to any of these:
 
