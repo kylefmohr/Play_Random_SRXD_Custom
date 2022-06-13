@@ -1,15 +1,16 @@
 ## Spin Rhythm lets you play a random song from the main soundtrack. Why can't we do the same for custom charts? 
-This project aims to change that. This will let you press a hotkey of your choice to start playing a new, random custom chart. It works equally as well regardless of if the game is open or not! 
+This project aims to change that. It's compatible with both the PC and Mac! It will let you press a hotkey of your choice to start playing a new, random custom chart. It works equally as well regardless of if the game is open or not! 
 
+### Additionally, you can choose to download and play a random song from [spinsha.re](https://spinsha.re/)!
 ## Variables you may want to change:
 
-[`difficulty`: default is 4, which is XD](https://github.com/kylefmohr/Play_Random_SRXD_Custom/blob/18715cecb7fcff52af6da8deee4a5e7282130408/main.py#L5)
+`difficulty`: default is 4, which is XD
 
 If you want expert, change it to 3
 
 Hard, change to 2, etc. etc
 
-[`key_to_listen_for`: by default, **it is listening for the "Home" key** on the keyboard to be pressed](https://github.com/kylefmohr/Play_Random_SRXD_Custom/blob/18715cecb7fcff52af6da8deee4a5e7282130408/main.py#L5)
+`key_to_listen_for`: by default, **it is listening for the "Home" key** on the keyboard to be pressed
 
 You can change it to any of these:
 
@@ -143,14 +144,17 @@ You can change it to any of these:
 
 * Download this repository as a zip file or clone
 
-* Open a command prompt and cd to this directory
-
+* Open a command prompt and navigate to the folder where you downloaded the repository
 
 * run `pip3 install -r requirements.txt`
 
-* then run `python3 main.py`
+* **if you'd like to play one of your already downloaded charts**, run `python3 play-random-song-local.py`
 
-You can then simply leave that command prompt running in the background. It should work now, test it out!
+* **if you'd like to download and play a random chart from [spinsha.re](https://spinsha.re)**, run `python3 download-and-play-from-spinsha.re.py`
+
+You can then simply leave that command prompt running in the background. It's now waiting for you to press the hotkey, test it out!
+
+If you choose to download and run from [spinsha.re](https://spinsha.re), you **must** follow their [usage policy](https://spinsha.re/api/docs/usage-policy)! Also, please be respectful and don't waste their bandwidth by spamming the hotkey, shit's expensive yo. I'm not affiliated with them, but here are a few ways you can support them! https://spinsha.re/support
 
 If you run into issues or just want some help, feel free to DM me on Discord forsalebypwner#2310
 
@@ -158,4 +162,4 @@ If you find a bug or have anything you think should be change, opening issues an
 
 ### On MacOS only:
 
-Upon first launch of the script, you'll get a pop-up prompting you to allow input monitoring for this program, you must do so for it to work. Additionally, every time you start the program, it will print out a message that says "This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients." **regardless of whether you've given it input monitoring permissions or not**
+Upon first launch of the script, you'll get a pop-up prompting you to allow input monitoring for this program, you must do so for it to work. Additionally, every time you start the program, it will print out a message that says "This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients." **regardless of whether you've given it input monitoring permissions or not**. This can be safely ignored. 
