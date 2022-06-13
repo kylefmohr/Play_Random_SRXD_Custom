@@ -156,3 +156,6 @@ If you run into issues or just want some help, feel free to DM me on Discord for
 
 If you find a bug or have anything you think should be change, opening issues and pull requests is always welcome!
 
+### On MacOS only:
+
+Upon first launch of the script, you'll get a pop-up prompting you to allow input monitoring for this program, you must do so for it to work. Additionally, every time you start the program, it will print out a message that says "This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients." **regardless of whether you've given it input monitoring permissions or not**
