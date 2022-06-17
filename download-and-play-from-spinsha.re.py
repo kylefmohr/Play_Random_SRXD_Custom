@@ -1,6 +1,7 @@
 import os, random, time, platform, re
 import requests
 import zipfile
+import bs4
 from pynput import keyboard
 from pynput.keyboard import Key
 
@@ -11,12 +12,17 @@ customs_dir_windows = os.path.expandvars('%USERPROFILE%\\AppData\\LocalLow\\Supe
 customs_dir_mac = os.path.expanduser('~/Library/Application Support/Super Spin Digital/Spin Rhythm XD/Custom')
 customs_dir = ''
 
-spinshare_newest_song_number = 6257  # have to manually update this. TODO: automate this
+try:
+    spinshare_new = requests.get("https://spinsha.re/new")
+    spinshare_newest_song_number = bs4.BeautifulSoup(spinshare_new.text, "html.parser").find(class_="song-item").get("href").split("/")[-1]  # that's a hefty one-liner. it parses the html of spinsha.re/new to determine the newest song number, and therefore the highest possible random song number
+except:
+    print("Failed to get the newest song number from https://spinsha.re, using outdated value instead")
+    spinshare_newest_song_number = 6291
 #   also:
 #   TODO: add difficulty range
 
 
-def enumerate_customs(): # reads the identifier of every custom song in your library, for later use in launch_game
+def enumerate_customs():  # reads the identifier of every custom song in your library, for later use in launch_game
     os.chdir(customs_dir)
     customs = os.listdir()
     custom_charts = []
@@ -43,27 +49,26 @@ def song_exists_locally(song_number):
 
 
 def download_song(download_attempts):
-    random_song_number = random.randint(1000, spinshare_newest_song_number)
+    random_song_number = random.randint(1000, spinshare_newest_song_number)  # according to spinsha.re devs, this should include all songs, but this scheme may change in the future
     if song_exists_locally(random_song_number):
         print("Song already exists locally, no need to download")
-        file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()['data']['fileReference']  # https://spinsha.re/api/docs/open/songs#detail
+        file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()['data']['fileReference']  # we need the fileReference string because that's how the custom charts are named
         return True, file_reference
     else:
         url = "https://spinsha.re/api/song/" + str(random_song_number) + "/download"
         response = requests.get(url)
         filename = ''
         if response.status_code == 200:
-
-            if "Content-Disposition" in response.headers:  # https://stackoverflow.com/a/53299682
+            if "Content-Disposition" in response.headers:  # https://stackoverflow.com/a/53299682 this is a way to get the filename from the download
                 filename = re.findall("filename=(.+)", response.headers["Content-Disposition"])[0]
                 filename = filename.replace('"', '')
                 file_reference = filename.replace('.zip', '')
-            else:
+            else:  # if that doesn't work, we can always query the api and determine the filename from the fileReference string
                 file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()['data']['fileReference']  # https://spinsha.re/api/docs/open/songs#detail
                 filename = file_reference + ".zip"
             full_path = customs_dir + "\\" + filename
             with open(full_path, "wb") as f:
-                f.write(response.content)
+                f.write(response.content)  # write new custom song to disk
             print("Downloaded to " + full_path)
             unzip_and_move_files(full_path)
             return True, file_reference
@@ -101,8 +106,7 @@ def start_process(download_attempts):  # needed to separate this from on_press()
             start_process(download_attempts)  # retry download
 
 
-def on_press(key): # callback for when 'any' key gets pressed on your keyboard, regardless of which app has focus
-
+def on_press(key):  # callback for when 'any' key gets pressed on your keyboard, regardless of which app has focus
     if key == key_to_listen_for:
         start_process(0)
 
