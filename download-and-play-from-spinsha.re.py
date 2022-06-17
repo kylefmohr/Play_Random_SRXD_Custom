@@ -9,7 +9,7 @@ from pynput.keyboard import Key
 #############################################################
 difficulty = 4  # 0 is Easy, 1 is Medium, 2 is Hard, 3 is Expert, 4 is XD
 key_to_listen_for = Key.home
-difficulty_range_enabled = True  # change to True if you want to enable the difficulty range
+difficulty_range_enabled = False  # change to True if you want to enable the difficulty range
 difficulty_score_max = 45  # a narrow range may cause the search to take longer or even fail
 difficulty_score_min = 0
 #############################################################
