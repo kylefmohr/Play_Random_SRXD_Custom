@@ -167,6 +167,10 @@ If you run into issues or just want some help, feel free to DM me on Discord for
 
 If you find a bug or have anything you think should be change, opening issues and pull requests is always welcome!
 
+### Known issues:
+
+If you're already in-game and press the button to download a new random custom song, you will get an error if you're still in the custom song selection screen. You can workaroud this simply by going back to the SRXD main menu before pressing the button. 
+
 ### On MacOS only:
 
 Upon first launch of the script, you'll get a pop-up prompting you to allow input monitoring for this program, you must do so for it to work. Additionally, every time you start the program, it will print out a message that says "This process is not trusted! Input event monitoring will not be possible until it is added to accessibility clients." **regardless of whether you've given it input monitoring permissions or not**. This can be safely ignored. 
