@@ -4,15 +4,22 @@ This project aims to change that. It's compatible with both the PC and Mac! It w
 ### Additionally, you can choose to download and play a random song from [spinsha.re](https://spinsha.re/)!
 ## Variables you may want to change:
 
-`difficulty`: default is 4, which is XD
+I'm hoping this is self-explanatory enough, but feel free to ask if you have questions! Discord is forsalebypwner#2310
+Look for this section near the beginning of the program:
 
-If you want expert, change it to 3
+```
+#############################################################
+#############################################################
+difficulty = 4  # 0 is Easy, 1 is Medium, 2 is Hard, 3 is Expert, 4 is XD
+key_to_listen_for = Key.home
+difficulty_range_enabled = False  # change to True if you want to enable the difficulty range
+difficulty_score_max = 45  # a narrow range may cause the search to take longer or even fail
+difficulty_score_min = 0
+#############################################################
+#############################################################
+```
 
-Hard, change to 2, etc. etc
-
-`key_to_listen_for`: by default, **it is listening for the "Home" key** on the keyboard to be pressed
-
-You can change it to any of these:
+You can change key_to_listen_for to any of these:
 
 <details>
     <summary>List of valid hotkeys</summary>
