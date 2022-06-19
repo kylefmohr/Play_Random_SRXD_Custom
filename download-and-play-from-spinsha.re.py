@@ -1,7 +1,6 @@
-import os, random, time, platform, re
+import os, random, time, platform, re, json
 import requests
 import zipfile
-import bs4
 from pynput import keyboard
 from pynput.keyboard import Key
 
@@ -10,38 +9,76 @@ from pynput.keyboard import Key
 difficulty = 4  # 0 is Easy, 1 is Medium, 2 is Hard, 3 is Expert, 4 is XD
 key_to_listen_for = Key.home
 difficulty_range_enabled = False  # change to True if you want to enable the difficulty range
-difficulty_score_max = 45  # a narrow range may cause the search to take longer or even fail
+difficulty_score_max = 45
 difficulty_score_min = 0
 #############################################################
 #############################################################
-
-
-
-difficulty_names = ["Easy", "Medium", "Hard", "Expert", "XD"]
 
 customs_dir_windows = os.path.expandvars('%USERPROFILE%\\AppData\\LocalLow\\Super Spin Digital\\Spin Rhythm XD\\Custom')
 customs_dir_mac = os.path.expanduser('~/Library/Application Support/Super Spin Digital/Spin Rhythm XD/Custom')
 customs_dir = ''
 
-try:
-    spinshare_new = requests.get("https://spinsha.re/new")
-    spinshare_newest_song_number = int(bs4.BeautifulSoup(spinshare_new.text, "html.parser").find(class_="song-item").get("href").split("/")[-1])  # that's a hefty one-liner. it parses the html of spinsha.re/new to determine the newest song number, and therefore the highest possible random song number
-except:
-    print("Failed to get the newest song number from https://spinsha.re, using outdated value instead")
-    spinshare_newest_song_number = 6291
-#   also:
-#   TODO: add difficulty range
+difficulty_names = ["Easy", "Medium", "Hard", "Expert", "XD"]
 
 
-def enumerate_customs():  # reads the identifier of every custom song in your library, for later use in launch_game
-    os.chdir(customs_dir)
-    customs = os.listdir()
-    custom_charts = []
-    for file in customs:
-        if file.endswith(".srtb"):
-            custom_charts.append(file)
+def initialize_cache():
+    if not os.path.exists('spinshare-cache.json'):
+        print("Caching custom song information from spinsha.re, please wait a moment...")
+        payload = '{"searchQuery": ""}'
+        spinshare_cache = requests.post("https://spinsha.re/api/searchCharts", data=payload).text
+        spinshare_cache = spinshare_cache
+        with open('spinshare-cache.json', 'w') as f:  # write api response to cache
+            f.write(spinshare_cache)
+        return spinshare_cache
+    else:  # if cache exists, read it
+        if int(time.time()) - int(os.path.getmtime('spinshare-cache.json')) < 60 * 60 * 4:  # if cache is older than 4 hours, refresh it
+            print("Using recently cached custom song information from spinsha.re")
+            with open('spinshare-cache.json', 'r') as f:
+                spinshare_cache = f.read()
+            return spinshare_cache
+        else:
+            print("Removing old cache file")
+            os.remove('spinshare-cache.json')
+            return initialize_cache()
 
-    return custom_charts
+
+spinshare_cache = initialize_cache()
+id_list = []  # list of custom song ids
+newest_song_id = 0
+spinshare_cache_json = json.loads(spinshare_cache)
+for song in spinshare_cache_json['data']:
+    id_list.append(song['id'])
+    if song['id'] > newest_song_id:
+        newest_song_id = song['id']
+
+print("Loaded information about " + str(newest_song_id) + " custom songs from spinsha.re")
+print("Ready! Press " + str(key_to_listen_for) + " to spin!")
+random_song_id = 0
+random_song_fileReference = ''
+song_has_difficulty = False
+random_song_difficulty_score = 0
+random_song_title = ''
+random_song_artist = ''
+random_song_charter = ''
+
+
+def choose_random_song():
+    random_song_id = random.choice(id_list)
+    for song in spinshare_cache_json['data']:
+        if song['id'] == random_song_id:
+            random_song_fileReference = song['fileReference']
+            random_song_title = song['title']
+            random_song_artist = song['artist']
+            random_song_charter = song['charter']
+            song_has_difficulty = song['has' + difficulty_names[difficulty] + 'Difficulty']
+            if difficulty_range_enabled:
+                if song_has_difficulty:
+                    random_song_difficulty_score = int(song[difficulty_names[difficulty] + 'Difficulty'])
+                    return random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score
+                else:
+                    return choose_random_song()  # choose a new song if the difficulty is not available
+            else:
+                return random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, 0
 
 
 # cheers to the spinsha.re devs https://github.com/SpinShare/client/blob/master/src/components/Overlays/PlayOverlay.vue#L80
@@ -50,79 +87,78 @@ def get_launch_uri(chart, difficulty):
     return 'steam://run/1058830//play ' + chart + ' difficulty ' + str(difficulty)
 
 
-def song_exists_locally(song_number):
-    file_reference = requests.get("https://spinsha.re/api/song/" + str(song_number)).json()['data']['fileReference']  # https://spinsha.re/api/docs/open/songs#detail
+def song_exists_locally(random_song_fileReference):  # no need to re-download the song if it already exists
+    # file_reference = requests.get("https://spinsha.re/api/song/" + str(song_number)).json()['data']['fileReference']  # https://spinsha.re/api/docs/open/songs#detail
     customs = os.listdir(customs_dir)
     for file in customs:
-        if file.startswith(file_reference):
+        if file.startswith(random_song_fileReference):
             return True
     return False
 
 
-def download_song(download_attempts, random_song_number):
-    url = "https://spinsha.re/api/song/" + str(random_song_number) + "/download"
+def download_song(download_attempts, random_song_id):
+    url = "https://spinsha.re/api/song/" + str(random_song_id) + "/download"
     response = requests.get(url)
     filename = ''
     if response.status_code == 200:
         if "Content-Disposition" in response.headers:  # https://stackoverflow.com/a/53299682 this is a way to get the filename from the download
             filename = re.findall("filename=(.+)", response.headers["Content-Disposition"])[0]
             filename = filename.replace('"', '')
-            file_reference = filename.replace('.zip', '')
+            # = filename.replace('.zip', '')
         else:  # if that doesn't work, we can always query the api and determine the filename from the fileReference string
-            file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()['data'][
-                'fileReference']  # https://spinsha.re/api/docs/open/songs#detail
-            filename = file_reference + ".zip"
+            filename = random_song_fileReference + ".zip"
         full_path = customs_dir + "\\" + filename
         with open(full_path, "wb") as f:
-            f.write(response.content)  # write new custom song to disk
+            f.write(response.content)  # write custom chart .zip bundle to the disk
         print("Downloaded to " + full_path)
         unzip_and_move_files(full_path)
-        return True, file_reference
+        return True, random_song_id
     else:  # if response code != 200
         download_attempts += 1
         return False, None
 
 
 def stage_download(download_attempts):  # prepare to download the random song, first determine if it meets our requirements
-    random_song_number = random.randint(1000, spinshare_newest_song_number)  # according to spinsha.re devs, this should include all songs, but this scheme may change in the future
-    if song_exists_locally(random_song_number):
+    random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score = choose_random_song()
+    if song_exists_locally(random_song_fileReference):
         print("Song already exists locally, no need to download")
-        file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()['data']['fileReference']  # we need the fileReference string because that's how the custom charts are named
-        return True, file_reference
+        #  file_reference = requests.get("https://spinsha.re/api/song/" + str(random_song_id)).json()['data']['fileReference']  # we need the fileReference string because that's how the custom charts are named
+        return True, random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score
     elif difficulty_range_enabled:
-        api_call = requests.get("https://spinsha.re/api/song/" + str(random_song_number)).json()
-        has_requested_difficulty = api_call['data']['has' + difficulty_names[difficulty] + 'Difficulty']
-        if has_requested_difficulty:
-            difficulty_score = int(api_call['data'][difficulty_names[difficulty] + 'Difficulty'])
-            if difficulty_score_min <= difficulty_score <= difficulty_score_max:
-                print("Song has the requested difficulty score (" + str(difficulty_score) + "), downloading")
-                return download_song(download_attempts, random_song_number)
+        # api_call = requests.get("https://spinsha.re/api/song/" + str(random_song_id)).json()
+        # song_has_requested_difficulty = api_call['data']['has' + difficulty_names[difficulty] + 'Difficulty']
+        if song_has_difficulty:
+            # difficulty_score = int(api_call['data'][difficulty_names[difficulty] + 'Difficulty'])
+            if difficulty_score_min <= random_song_difficulty_score <= difficulty_score_max:
+                print("Song has the requested difficulty score (" + str(random_song_difficulty_score) + "), downloading")
+                successful, random_song_id = download_song(download_attempts, random_song_id)
+                return successful, random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score
             else:
                 print("Song difficulty is out of range, skipping")
-                download_attempts += 1
-                return False, None
+                return False, None, None, None, None, None, None
         else:
             print("Song does not have the requested difficulty " + difficulty_names[difficulty] + ", skipping")
-            download_attempts += 1
-            return False, None
+            return False, None, None, None, None, None, None
     else:  # song doesn't exist locally, and difficulty range is not enabled
-        return download_song(download_attempts, random_song_number)
+        successful, random_song_id =  download_song(download_attempts, random_song_id)
+        return successful, random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score
 
 
 def unzip_and_move_files(full_path):
     with zipfile.ZipFile(full_path, 'r') as zipped_song:
         zipped_song.extractall(customs_dir)
-    os.remove(full_path)
+    os.remove(full_path)  # remove the zip file after extracting it
 
 
 def start_process(download_attempts):  # needed to separate this from on_press(), because we need to track the download attempts, and on_press by default is only able to pass the key as an argument
     print("Downloading a random song from https://spinsha.re")
-    download_status, file_reference = stage_download(download_attempts)
+    download_status, random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score = stage_download(download_attempts)
     if download_status:
-        print("Successfully downloaded a random song from https://spinsha.re")
+        print("Successfully downloaded " + random_song_title + " by " + random_song_artist + ", charted by " + random_song_charter + ", difficulty score" + str(random_song_difficulty_score))
+        print("Downloaded from https://spinsha.re/song/" + str(random_song_id))
         print("Launching the game with the downloaded song")
 
-        uri = get_launch_uri(file_reference, difficulty)
+        uri = get_launch_uri(random_song_fileReference, difficulty)
         print(uri)
         if platform.system() == 'Windows':
             os.startfile(uri)
@@ -157,3 +193,4 @@ if __name__ == '__main__':
     while True:
         time.sleep(0.05)  # reduce CPU usage
         pass
+

@@ -52,3 +52,4 @@ if __name__ == '__main__':
     while True:
         time.sleep(0.05)  # reduce CPU usage
         pass
+
