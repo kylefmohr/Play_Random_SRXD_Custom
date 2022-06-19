@@ -19,7 +19,7 @@ difficulty_score_min = 0
 #############################################################
 ```
 
-You can change key_to_listen_for to any of these:
+## You can change key_to_listen_for to any of these:
 
 <details>
     <summary>List of valid hotkeys</summary>
