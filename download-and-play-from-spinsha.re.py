@@ -8,7 +8,7 @@ from pynput.keyboard import Key
 #############################################################
 difficulty = 4  # 0 is Easy, 1 is Medium, 2 is Hard, 3 is Expert, 4 is XD
 key_to_listen_for = Key.home
-difficulty_range_enabled = False  # change to True if you want to enable the difficulty range
+difficulty_range_enabled = True  # change to True if you want to enable the difficulty range
 difficulty_score_max = 45
 difficulty_score_min = 0
 #############################################################
@@ -73,7 +73,11 @@ def choose_random_song():
             song_has_difficulty = song['has' + difficulty_names[difficulty] + 'Difficulty']
             if difficulty_range_enabled:
                 if song_has_difficulty:
-                    random_song_difficulty_score = int(song[difficulty_names[difficulty] + 'Difficulty'])
+                    try:
+                        random_song_difficulty_score = int(song[difficulty_names[difficulty] + 'Difficulty'])
+                    except TypeError:
+                        print("Error: null value for difficulty score for song ID " + str(random_song_id))
+                        return choose_random_song()
                     return random_song_id, random_song_fileReference, random_song_title, random_song_artist, random_song_charter, random_song_difficulty_score
                 else:
                     return choose_random_song()  # choose a new song if the difficulty is not available
